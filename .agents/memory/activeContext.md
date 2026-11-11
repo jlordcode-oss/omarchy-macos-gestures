@@ -9,4 +9,5 @@ Investigación profunda, planning de arquitectura y desarrollo del plugin comple
 
 ## Estado Actual
 - **Estado**: FIN
-- **Bloqueos**: Ninguno. Todos los tests pasan, Hyprland opera sin errores de configuración y el IPC responde.
+- **Repositorio Público**: https://github.com/jlordcode-oss/omarchy-macos-gestures
+- **Bloqueos**: Ninguno. Todos los tests pasan, Hyprland opera sin errores de configuración, el IPC responde y el repositorio está publicado en GitHub.

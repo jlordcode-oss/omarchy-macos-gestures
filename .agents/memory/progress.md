@@ -21,3 +21,8 @@
   - [x] Validación con `omarchy plugin validate` (0 errores).
   - [x] Validación de configuración de Hyprland con `hyprctl configerrors` (0 errores).
   - [x] Despliegue e instalación en `~/.config/omarchy/plugins/io.github.devmercenario.macos-gestures` y verificación de IPC activo (`running`).
+- [x] **Documentación y Publicación en GitHub**:
+  - [x] Redacción de guía exhaustiva en `docs/GESTURES_GUIDE.md` con tuning de hardware y troubleshooting.
+  - [x] Actualización de `README.md` con enlaces arquitectónicos y guía de uso.
+  - [x] Creación del repositorio público en GitHub: `https://github.com/jlordcode-oss/omarchy-macos-gestures`.
+  - [x] Push de rama `main` y sincronización con origin.
