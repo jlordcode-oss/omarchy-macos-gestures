@@ -1,0 +1,97 @@
+#!/bin/bash
+
+# omarchy:summary=Configure and control macOS trackpad gestures for Omarchy
+# omarchy:group=gestures
+# omarchy:args=[status|enable|disable|toggle|mode|natural-scroll|mission-control|app-expose|launchpad|show-desktop|sync]
+# omarchy:examples=omarchy-macos-gestures status | omarchy-macos-gestures mode drag3fg | omarchy-macos-gestures mission-control
+
+set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+MANAGER="$SCRIPT_DIR/scripts/macos_gestures_manager.py"
+
+if [[ ! -f "$MANAGER" ]]; then
+  # Fallback to plugin directory in ~/.config/omarchy/plugins
+  MANAGER="$HOME/.config/omarchy/plugins/io.github.devmercenario.macos-gestures/scripts/macos_gestures_manager.py"
+fi
+
+ACTION="${1:-status}"
+
+case "$ACTION" in
+  status)
+    shift || true
+    python3 "$MANAGER" status "$@"
+    ;;
+  enable)
+    python3 "$MANAGER" enable
+    ;;
+  disable)
+    python3 "$MANAGER" disable
+    ;;
+  toggle)
+    python3 "$MANAGER" toggle
+    ;;
+  mode)
+    shift
+    MODE="${1:-}"
+    if [[ -z "$MODE" ]]; then
+      echo "Usage: omarchy-macos-gestures mode <standard|drag3fg>" >&2
+      exit 1
+    fi
+    python3 "$MANAGER" mode "$MODE"
+    ;;
+  natural-scroll)
+    shift
+    STATE="${1:-toggle}"
+    python3 "$MANAGER" natural-scroll "$STATE"
+    ;;
+  sync)
+    python3 "$MANAGER" sync
+    ;;
+  mission-control|mc)
+    if command -v omarchy-shell >/dev/null 2>&1; then
+      omarchy-shell shell toggle io.github.devmercenario.macos-gestures || true
+    fi
+    ;;
+  app-expose|expose)
+    if command -v omarchy-shell >/dev/null 2>&1; then
+      omarchy-shell io.github.devmercenario.macos-gestures appExpose || true
+    fi
+    ;;
+  launchpad)
+    if command -v omarchy-shell >/dev/null 2>&1; then
+      omarchy-shell omarchy.dock apps || true
+    fi
+    ;;
+  show-desktop|desktop)
+    if command -v omarchy-shell >/dev/null 2>&1; then
+      omarchy-shell io.github.devmercenario.macos-gestures showDesktop || true
+    fi
+    ;;
+  -h|--help|help)
+    cat <<EOF
+Usage: omarchy-macos-gestures <command> [options]
+
+Commands:
+  status [--json]                 Show current macOS gestures status and profile
+  enable                          Enable macOS trackpad gestures
+  disable                         Disable macOS trackpad gestures
+  toggle                          Toggle gestures on or off
+  mode <standard|drag3fg>         Set gesture profile:
+                                    - standard: 3-finger navigation, 4-finger pinch Launchpad
+                                    - drag3fg:  3-finger drag, 4-finger navigation
+  natural-scroll <on|off|toggle>  Configure natural scrolling direction
+  mission-control                 Open/toggle Mission Control overlay
+  app-expose                      Open/toggle App Exposé for active application
+  launchpad                       Open/toggle Launchpad app grid
+  show-desktop                    Toggle clean desktop view
+  sync                            Regenerate Hyprland Lua configuration and reload
+EOF
+    exit 0
+    ;;
+  *)
+    echo "Unknown command: $ACTION" >&2
+    echo "Run 'omarchy-macos-gestures --help' for usage." >&2
+    exit 1
+    ;;
+esac

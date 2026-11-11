@@ -1,0 +1,13 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+python3 "$root/scripts/validate_manifest.py" "$root"
+bash -n "$root/bin/omarchy-macos-gestures"
+python3 "$root/tests/test_gestures.py"
+
+if command -v omarchy >/dev/null 2>&1; then
+  omarchy plugin validate "$root"
+fi
+
+printf 'All macOS gestures plugin checks passed successfully.\n'
