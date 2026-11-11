@@ -47,6 +47,8 @@ omarchy-macos-gestures/
 ├── Overlay.qml                # Overlay de Mission Control y App Exposé (Quickshell)
 ├── bin/
 │   └── omarchy-macos-gestures # Herramienta CLI de gestión
+├── docs/
+│   └── GESTURES_GUIDE.md      # Guía detallada de gestos, hardware y troubleshooting
 ├── scripts/
 │   ├── macos_gestures_manager.py # Generador reactivo de configuración Hyprland Lua
 │   └── validate_manifest.py     # Validador portátil de manifiesto
@@ -107,6 +109,21 @@ omarchy-macos-gestures app-expose
 # Deshabilitar o habilitar temporalmente los gestos
 omarchy-macos-gestures toggle
 ```
+
+---
+
+## 📖 Documentación Detallada y Guía de Usuario
+
+Para una referencia exhaustiva sobre el comportamiento de cada gesto, optimización de hardware y solución de problemas, consulta:
+
+👉 **[Guía Completa de Gestos y Hardware (`docs/GESTURES_GUIDE.md`)](docs/GESTURES_GUIDE.md)**
+
+Contenidos destacados de la guía:
+- **Mapeo técnico exhaustivo**: Desglose de 2, 3 y 4 dedos para `mode standard` y `mode drag3fg`.
+- **Mission Control & App Exposé**: Uso de la búsqueda interactiva, filtrado por app y navegación por teclado.
+- **Hardware y Sensibilidad**: Consejos para Apple Magic Trackpad 2/3 (Bluetooth/USB) y trackpads de portátiles (ThinkPad, XPS, Framework).
+- **Resolución de Problemas (Troubleshooting)**: Diagnóstico con `hyprctl configerrors`, permisos de usuario (`input`), eliminación de conflictos con daemons antiguos (`libinput-gestures`, `touchegg`) y recuperación rápida.
+- **Integración IPC**: Control programático a través de `omarchy-shell` y atajos de teclado en Hyprland.
 
 ---
 
