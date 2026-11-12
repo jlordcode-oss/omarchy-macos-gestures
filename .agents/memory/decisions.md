@@ -16,3 +16,17 @@
 - **Contexto**: Omarchy ya cuenta con Launchpad (el `AppGrid` de `omarchy.dock apps`) y Centro de Notificaciones (`notifications.showHistory`).
 - **Decisión**: Reutilizar directamente estos servicios existentes a través de IPC y comandos documentados en lugar de reinventar una cuadrícula de aplicaciones o centro de notificaciones duplicado.
 - **Justificación**: Cumple estrictamente con la Regla Sagrada 1 (Reutilización sobre creación desde cero) y mantiene la coherencia del sistema operativo.
+
+
+## ADR-004: Corrección de Enlaces de Gestos en Hyprland 0.56.2 y Omarchy 4
+- **Contexto**: Tras las pruebas iniciales en hardware, sólo funcionaba el swipe horizontal de 3 dedos; el swipe vertical y los pellizcos no disparaban.
+- **Hallazgos de Ingeniería Inversa en `/usr/bin/Hyprland`**:
+  1. `CLuaFunctionGesture` requiere que el campo `action` sea una tabla conteniendo al menos una de las funciones `start`, `update`, `end` o `finish` (pasar una función pura como `action = function()` es rechazado por el parser C++).
+  2. En libinput/Hyprland, el evento físico de pellizco sólo emite `PINCH_IN` (8) o `PINCH_OUT` (9); registrar un gesto con dirección genérica `pinch` (7) nunca entra en la condición de coincidencia en `CTrackpadGestures::gestureUpdate`.
+  3. `disable_inhibit = true` es indispensable para evitar que ventanas activas inhiban los gestos de trackpad.
+  4. Los comandos de dispatch en Hyprland 0.56 operan sobre el espacio de nombres Lua (`hl.dsp.focus` y `hl.dsp.workspace.toggle_special()`).
+- **Decisión**:
+  - Dividir los gestos de 4 dedos en `direction = "pinchin"` y `direction = "pinchout"` con `{ finish = function() ... end }`.
+  - Configurar Mission Control y App Exposé con tablas `{ finish = function() ... end }` y `disable_inhibit = true`.
+  - Asegurar la invalidación de caché de Lua en `hyprland.lua` (`package.loaded["hypr.macos_gestures"] = nil`) para recargas sin reinicio del compositor.
+- **Justificación**: Garantiza la ejecución determinista de los 5 gestos de macOS con latencia cero en Hyprland.
