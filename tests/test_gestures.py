@@ -52,7 +52,8 @@ class TestMacOSGestures(unittest.TestCase):
         self.assertIn('direction = "horizontal"', lua)
         self.assertIn('direction = "up"', lua)
         self.assertIn('direction = "down"', lua)
-        self.assertIn('direction = "pinch"', lua)
+        self.assertIn('direction = "pinchin"', lua)
+        self.assertIn('direction = "pinchout"', lua)
 
         # Syntax check with luac
         with tempfile.NamedTemporaryFile("w", suffix=".lua", delete=False) as tf:

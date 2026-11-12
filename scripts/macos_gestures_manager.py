@@ -102,33 +102,46 @@ hl.gesture({{
 hl.gesture({{
   fingers = {mc_fingers},
   direction = "up",
-  action = function()
-    hl.exec_cmd("omarchy-shell shell toggle io.github.devmercenario.macos-gestures")
-  end,
+  disable_inhibit = true,
+  action = {{
+    finish = function()
+      hl.exec_cmd("omarchy-shell io.github.devmercenario.macos-gestures missionControl")
+    end,
+  }},
 }})
 
 -- 3. App Exposé (Windows of the currently focused application)
 hl.gesture({{
   fingers = {expose_fingers},
   direction = "down",
-  action = function()
-    hl.exec_cmd("omarchy-shell io.github.devmercenario.macos-gestures appExpose")
-  end,
+  disable_inhibit = true,
+  action = {{
+    finish = function()
+      hl.exec_cmd("omarchy-shell io.github.devmercenario.macos-gestures appExpose")
+    end,
+  }},
 }})
 
--- 4 & 5. Launchpad (Pinch In) & Show Desktop (Pinch Out / Spread) with 4 fingers
+-- 4. Launchpad (Pinch In with 4 fingers)
 hl.gesture({{
   fingers = 4,
-  direction = "pinch",
+  direction = "pinchin",
+  disable_inhibit = true,
   action = {{
-    finish = function(e)
-      if e and e.delta and e.delta < 0 then
-        -- Pinch In -> Launchpad
-        hl.exec_cmd("omarchy-shell omarchy.dock apps")
-      else
-        -- Pinch Out -> Show Desktop
-        hl.exec_cmd("omarchy-shell io.github.devmercenario.macos-gestures showDesktop")
-      end
+    finish = function()
+      hl.exec_cmd("omarchy-shell io.github.devmercenario.macos-gestures launchpad")
+    end,
+  }},
+}})
+
+-- 5. Show Desktop (Pinch Out / Spread with 4 fingers)
+hl.gesture({{
+  fingers = 4,
+  direction = "pinchout",
+  disable_inhibit = true,
+  action = {{
+    finish = function()
+      hl.exec_cmd("omarchy-shell io.github.devmercenario.macos-gestures showDesktop")
     end,
   }},
 }})
@@ -151,32 +164,45 @@ def sync_hyprland(config: Dict[str, Any]) -> bool:
 
 
 def ensure_hyprland_hook() -> bool:
-    hook_line = 'pcall(require, "hypr.macos_gestures")'
+    hook_lines = (
+        "-- macOS Gestures Plugin integration\n"
+        'package.loaded["hypr.macos_gestures"] = nil\n'
+        'pcall(require, "hypr.macos_gestures")\n'
+    )
     if not HYPRLAND_MAIN_CONF.exists():
         return False
 
     with open(HYPRLAND_MAIN_CONF, "r", encoding="utf-8") as f:
         content = f.read()
 
-    if hook_line in content:
+    if "hypr.macos_gestures" in content:
+        if 'package.loaded["hypr.macos_gestures"] = nil' not in content:
+            content = content.replace(
+                'pcall(require, "hypr.macos_gestures")',
+                'package.loaded["hypr.macos_gestures"] = nil\npcall(require, "hypr.macos_gestures")',
+            )
+            with open(HYPRLAND_MAIN_CONF, "w", encoding="utf-8") as f:
+                f.write(content)
         return True
 
     # Append hook safely before end
-    new_content = content.rstrip() + f"\n\n-- macOS Gestures Plugin integration\n{hook_line}\n"
+    new_content = content.rstrip() + f"\n\n{hook_lines}"
     with open(HYPRLAND_MAIN_CONF, "w", encoding="utf-8") as f:
         f.write(new_content)
     return True
 
 
 def remove_hyprland_hook() -> None:
-    hook_line = 'pcall(require, "hypr.macos_gestures")'
     if not HYPRLAND_MAIN_CONF.exists():
         return
 
     with open(HYPRLAND_MAIN_CONF, "r", encoding="utf-8") as f:
         lines = f.readlines()
 
-    filtered = [l for l in lines if hook_line not in l and "macOS Gestures Plugin integration" not in l]
+    filtered = [
+        l for l in lines
+        if 'hypr.macos_gestures' not in l and "macOS Gestures Plugin integration" not in l
+    ]
     with open(HYPRLAND_MAIN_CONF, "w", encoding="utf-8") as f:
         f.writelines(filtered)
 

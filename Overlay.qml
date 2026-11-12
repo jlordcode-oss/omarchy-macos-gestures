@@ -73,14 +73,14 @@ Item {
 
   function activateWindow(address) {
     if (address && address.length > 0) {
-      Hyprland.dispatch("focuswindow address:" + address)
+      Hyprland.dispatch('hl.dsp.focus({ window = hl.get_window("address:' + address + '") })')
     }
     root.close()
   }
 
   function activateWorkspace(wsId) {
     if (wsId > 0) {
-      Hyprland.dispatch("workspace " + wsId)
+      Hyprland.dispatch('hl.dsp.focus({ workspace = "' + wsId + '" })')
     }
     root.close()
   }

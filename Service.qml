@@ -77,25 +77,31 @@ Item {
 
     function missionControl(): string {
       if (root.shell) {
-        root.shell.summon("io.github.devmercenario.macos-gestures", "{}")
+        root.shell.toggle("io.github.devmercenario.macos-gestures", "{}")
+        return "toggled"
       }
-      return "opened"
+      return "no-shell"
     }
 
     function appExpose(): string {
       if (root.shell) {
-        root.shell.summon("io.github.devmercenario.macos-gestures", JSON.stringify({ appExpose: true }))
+        root.shell.toggle("io.github.devmercenario.macos-gestures", JSON.stringify({ appExpose: true }))
+        return "toggled"
       }
-      return "opened"
+      return "no-shell"
     }
 
     function launchpad(): string {
+      if (root.shell) {
+        root.shell.toggle("omarchy.menu", JSON.stringify({ menu: "apps" }))
+        return "launchpad"
+      }
       dockAppsProc.running = true
       return "launchpad"
     }
 
     function showDesktop(): string {
-      Hyprland.dispatch("togglespecialworkspace desktop")
+      Hyprland.dispatch("hl.dsp.workspace.toggle_special()")
       return "show-desktop"
     }
   }
