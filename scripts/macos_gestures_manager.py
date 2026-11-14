@@ -69,7 +69,6 @@ def generate_lua(config: Dict[str, Any]) -> str:
     # navigation swipes are moved to 4 fingers, exactly matching macOS behavior.
     ws_fingers = 4 if is_drag3fg else int(config.get("workspaceSwipeFingers", 3))
     mc_fingers = 4 if is_drag3fg else int(config.get("missionControlFingers", 3))
-    expose_fingers = 4 if is_drag3fg else int(config.get("appExposeFingers", 3))
 
     natural_scroll = "true" if config.get("naturalScroll", True) else "false"
     clickfinger = "true" if config.get("clickfinger", True) else "false"
@@ -98,31 +97,42 @@ hl.gesture({{
   action = "workspace",
 }})
 
--- 2. Mission Control (Window overview across all workspaces)
-hl.gesture({{
-  fingers = {mc_fingers},
-  direction = "up",
-  disable_inhibit = true,
-  action = {{
-    finish = function()
-      hl.exec_cmd("omarchy-shell io.github.devmercenario.macos-gestures missionControl")
-    end,
-  }},
-}})
+-- 2. Vertical Swipes: Mission Control (Swipe Up) & App Exposé (Swipe Down)
+-- Hyprland 0.56.2 matches vertical swipes via direction = "vertical".
+-- Differentiating Swipe UP (Mission Control) vs Swipe DOWN (App Exposé) is handled
+-- by accumulating vertical delta during the gesture.
+do
+  local vert_dy = 0
+  hl.gesture({{
+    fingers = {mc_fingers},
+    direction = "vertical",
+    disable_inhibit = true,
+    action = {{
+      start = function()
+        vert_dy = 0
+      end,
+      update = function(e)
+        if e and e.delta and e.delta.y then
+          vert_dy = vert_dy + e.delta.y
+        end
+      end,
+      finish = function(e)
+        if e and e.cancelled then
+          vert_dy = 0
+          return
+        end
+        if vert_dy < -10 or (e and (e.direction == "UP" or e.direction == "up")) then
+          hl.exec_cmd("omarchy-shell io.github.devmercenario.macos-gestures missionControl")
+        elseif vert_dy > 10 or (e and (e.direction == "DOWN" or e.direction == "down")) then
+          hl.exec_cmd("omarchy-shell io.github.devmercenario.macos-gestures appExpose")
+        end
+        vert_dy = 0
+      end,
+    }},
+  }})
+end
 
--- 3. App Exposé (Windows of the currently focused application)
-hl.gesture({{
-  fingers = {expose_fingers},
-  direction = "down",
-  disable_inhibit = true,
-  action = {{
-    finish = function()
-      hl.exec_cmd("omarchy-shell io.github.devmercenario.macos-gestures appExpose")
-    end,
-  }},
-}})
-
--- 4. Launchpad (Pinch In with 4 fingers)
+-- 3. Launchpad (Pinch In with 4 fingers - physically triggers on 4-finger spread on hardware)
 hl.gesture({{
   fingers = 4,
   direction = "pinchin",
@@ -134,7 +144,7 @@ hl.gesture({{
   }},
 }})
 
--- 5. Show Desktop (Pinch Out / Spread with 4 fingers)
+-- 4. Show Desktop (Pinch Out with 4 fingers - physically triggers on 4-finger pinch on hardware)
 hl.gesture({{
   fingers = 4,
   direction = "pinchout",
@@ -242,8 +252,8 @@ def main() -> int:
             print(f"Spaces Swipe:   {'4 fingers' if is_drag else '3 fingers'} (Horizontal)")
             print(f"Mission Control:{'4 fingers' if is_drag else '3 fingers'} (Swipe Up)")
             print(f"App Exposé:     {'4 fingers' if is_drag else '3 fingers'} (Swipe Down)")
-            print("Launchpad:      4 fingers (Pinch In)")
-            print("Show Desktop:   4 fingers (Pinch Out)")
+            print("Launchpad:      4 fingers (Spread / Pinch Out)")
+            print("Show Desktop:   4 fingers (Pinch In)")
             print(f"Config File:    {CONFIG_FILE}")
             print(f"Hyprland Lua:   {HYPR_GESTURES_FILE}")
         return 0

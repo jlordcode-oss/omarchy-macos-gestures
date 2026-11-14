@@ -78,7 +78,7 @@ Commands:
   disable                         Disable macOS trackpad gestures
   toggle                          Toggle gestures on or off
   mode <standard|drag3fg>         Set gesture profile:
-                                    - standard: 3-finger navigation, 4-finger pinch Launchpad
+                                    - standard: 3-finger navigation, 4-finger spread Launchpad
                                     - drag3fg:  3-finger drag, 4-finger navigation
   natural-scroll <on|off|toggle>  Configure natural scrolling direction
   mission-control                 Open/toggle Mission Control overlay

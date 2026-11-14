@@ -1,18 +1,16 @@
 # Active Context: macOS Gestures in Omarchy
 
 ## Sprint Actual
-Diagnóstico exhaustivo y resolución de disparadores de gestos en hardware (Hyprland 0.56.2 + Omarchy 4 Quattro).
+Corrección de disparadores de gestos verticales de 3 dedos (Mission Control y App Exposé) y ajuste de información de gestos de 4 dedos tras validación en hardware con Hyprland 0.56.2.
 
 ## Foco Inmediato
-- Diagnóstico mediante ingeniería inversa del binario `/usr/bin/Hyprland` y llamadas D-Bus/IPC de Quickshell.
-- Corregida la especificación de `action` en Lua (debe ser tabla `{ finish = function() ... end }` y no función pura).
-- Corregida la dirección de gestos pinch: `pinchin` y `pinchout` en vez de `pinch`.
-- Implementado `disable_inhibit = true` para evitar que ventanas activas supriman gestos de trackpad.
-- Actualizados los dispatchers en Lua para `Hyprland.dispatch` (`hl.dsp.focus` y `hl.dsp.workspace.toggle_special()`).
-- Eliminadas duplicaciones en `~/.config/hypr/hyprland.lua` y añadido busteo de caché de `package.loaded`.
-- Suite de pruebas validada al 100% y cambios subidos a GitHub.
+- Se identificó mediante ingeniería inversa del binario `/usr/bin/Hyprland` que Hyprland 0.56.2 parsea únicamente `direction = "vertical"` para swipes verticales (no acepta subdirecciones discretas como `"up"` o `"down"` para el registro de swipe).
+- Se implementó en `scripts/macos_gestures_manager.py` el registro unificado `direction = "vertical"` con `disable_inhibit = true` y acumulador de `delta.y` en `action = { start, update, finish }` para distinguir con precisión `delta.y < -10` (Swipe UP -> Mission Control) y `delta.y > 10` (Swipe DOWN -> App Exposé).
+- Se actualizó la información de los gestos de 4 dedos (Launchpad se activa al expandir/separar 4 dedos y Mostrar Escritorio al pellizcar hacia adentro), manteniendo los bindings subyacentes intactos conforme al comportamiento validado por el usuario.
+- Sincronizados y verificados `~/.config/hypr/macos_gestures.lua` y `~/.config/omarchy/plugins/io.github.devmercenario.macos-gestures/`.
+- Tests unitarios y validación de manifiesto pasando al 100% (`./tests/run`).
 
 ## Estado Actual
 - **Estado**: FIN
 - **Repositorio Público**: https://github.com/jlordcode-oss/omarchy-macos-gestures
-- **Bloqueos**: Ninguno. Todos los gestos (3 dedos horizontal, 3 dedos arriba, 3 dedos abajo, 4 dedos pellizco hacia dentro y 4 dedos pellizco hacia fuera) configurados y operativos.
+- **Bloqueos**: Ninguno. Todos los gestos (3 dedos horizontal, 3 dedos vertical arriba/abajo con tracking direccional, y 4 dedos expandir/pellizcar) completamente verificados y sin errores de configuración.

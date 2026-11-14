@@ -63,10 +63,10 @@ El plugin ofrece dos perfiles operativos que replican con exactitud las dos conf
 |   - Swipe Abajo      -> App Exposé |                                     |
 |                                    | 4 Dedos:                            |
 | 4 Dedos:                           |   - Swipe Horizontal -> Espacios    |
-|   - Pellizco Dentro  -> Launchpad  |   - Swipe Arriba     -> M. Control  |
-|   - Pellizco Fuera   -> Escritorio |   - Swipe Abajo      -> App Exposé  |
-|                                    |   - Pellizco Dentro  -> Launchpad   |
-|                                    |   - Pellizco Fuera   -> Escritorio  |
+|   - Separar Fuera    -> Launchpad  |   - Swipe Arriba     -> M. Control  |
+|   - Pellizco Dentro  -> Escritorio |   - Swipe Abajo      -> App Exposé  |
+|                                    |   - Separar Fuera    -> Launchpad   |
+|                                    |   - Pellizco Dentro  -> Escritorio  |
 +------------------------------------+-------------------------------------+
 ```
 
@@ -89,8 +89,8 @@ Ideal si prefieres cambiar de escritorio y abrir Mission Control con la máxima 
 | **3 Dedos** | Deslizar Izquierda / Derecha | Transición 1:1 entre espacios de trabajo (Spaces). Si sueltas a medio camino, regresa elásticamente al espacio de origen. |
 | **3 Dedos** | Deslizar hacia Arriba | Abre **Mission Control** con vista panorámica de todas las ventanas. |
 | **3 Dedos** | Deslizar hacia Abajo | Abre **App Exposé** mostrando únicamente las ventanas de la aplicación activa. |
-| **4 Dedos** | Pellizco hacia adentro | Abre el lanzador de aplicaciones **Launchpad** (`omarchy.dock apps`). |
-| **4 Dedos** | Separar hacia afuera (Spread) | **Mostrar Escritorio** (oculta temporalmente las ventanas activas). |
+| **4 Dedos** | Separar hacia afuera (Spread) | Abre el lanzador de aplicaciones **Launchpad** (`omarchy.dock apps`). |
+| **4 Dedos** | Pellizco hacia adentro (Pinch) | **Mostrar Escritorio** (oculta temporalmente las ventanas activas). |
 
 Para activar este modo:
 ```bash
@@ -113,8 +113,8 @@ Al activarlo en Omarchy:
 | **4 Dedos** | Deslizar Izquierda / Derecha | Transición 1:1 entre espacios de trabajo (Spaces). |
 | **4 Dedos** | Deslizar hacia Arriba | Abre **Mission Control**. |
 | **4 Dedos** | Deslizar hacia Abajo | Abre **App Exposé**. |
-| **4 Dedos** | Pellizco hacia adentro | Abre **Launchpad**. |
-| **4 Dedos** | Separar hacia afuera | **Mostrar Escritorio**. |
+| **4 Dedos** | Separar hacia afuera (Spread) | Abre el lanzador de aplicaciones **Launchpad** (`omarchy.dock apps`). |
+| **4 Dedos** | Pellizco hacia adentro (Pinch) | **Mostrar Escritorio**. |
 
 Para activar este modo:
 ```bash
@@ -130,8 +130,8 @@ omarchy-macos-gestures mode drag3fg
 | **Cambio de Espacio** | 3/4 dedos horizontal | Transición suave de Workspaces | Hyprland `hl.gesture` + `CWorkspaceSwipeGesture` |
 | **Mission Control** | 3/4 dedos arriba | Overlay Panorámico de Ventanas | Quickshell `Overlay.qml` sobre Wayland LayerShell |
 | **App Exposé** | 3/4 dedos abajo | Mosaico de ventanas de la app activa | Filtrado por `window.class` en Quickshell |
-| **Launchpad** | 4 dedos pellizco dentro | Cuadrícula de aplicaciones | `omarchy.dock apps` |
-| **Show Desktop** | 4 dedos pellizco fuera | Espacio especial escritorio | Alternancia de Workspace especial Hyprland |
+| **Launchpad** | 4 dedos separar fuera (Spread) | Cuadrícula de aplicaciones | `omarchy.dock apps` |
+| **Show Desktop** | 4 dedos pellizco dentro (Pinch) | Espacio especial escritorio | Alternancia de Workspace especial Hyprland |
 | **Three-Finger Drag** | Accesibilidad macOS | Arrastre nativo libinput | `input.touchpad.drag_3fg = 1` |
 | **Natural Scroll** | Habilitado por defecto | Habilitado por defecto | `input.touchpad.natural_scroll = true` |
 
@@ -364,15 +364,18 @@ systemctl --user disable libinput-gestures touchegg 2>/dev/null || true
 
 ### 4. El gesto de Mission Control no abre el overlay
 
-1. Verifica que Quickshell está ejecutándose activamente:
+1. **Arquitectura de Swipes Verticales en Hyprland 0.56.2**:
+   Hyprland 0.56.2 utiliza la directiva `direction = "vertical"` para capturar swipes verticales multitáctiles. El plugin acumula el vector `delta.y` durante el evento `update` para diferenciar de forma determinista entre deslizamiento hacia arriba (`delta.y < 0`, Mission Control) y hacia abajo (`delta.y > 0`, App Exposé), evitando falsos positivos por micro-movimientos iniciales.
+
+2. Verifica que Quickshell está ejecutándose activamente:
    ```bash
    pgrep -a quickshell
    ```
-2. Prueba invocar el overlay manualmente desde la terminal:
+3. Prueba invocar el overlay manualmente desde la terminal:
    ```bash
    omarchy-macos-gestures mission-control
    ```
-3. Si el overlay no aparece, valida el estado del plugin en Omarchy:
+4. Si el overlay no aparece, valida el estado del plugin en Omarchy:
    ```bash
    omarchy plugin validate ~/.config/omarchy/plugins/io.github.devmercenario.macos-gestures
    ```

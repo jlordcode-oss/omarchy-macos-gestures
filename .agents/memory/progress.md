@@ -21,6 +21,8 @@
   - [x] Validación con `omarchy plugin validate` (0 errores).
   - [x] Validación de configuración de Hyprland con `hyprctl configerrors` (0 errores).
   - [x] Despliegue e instalación en `~/.config/omarchy/plugins/io.github.devmercenario.macos-gestures` y verificación de IPC activo (`running`).
+  - [x] Corrección de disparadores verticales en Hyprland 0.56.2: unificación en `direction = "vertical"` con acumulador `delta.y` para Mission Control (UP) y App Exposé (DOWN).
+  - [x] Actualización de documentación e información CLI para reflejar 4-finger spread -> Launchpad y 4-finger pinch -> Mostrar Escritorio.
 - [x] **Documentación y Publicación en GitHub**:
   - [x] Redacción de guía exhaustiva en `docs/GESTURES_GUIDE.md` con tuning de hardware y troubleshooting.
   - [x] Actualización de `README.md` con enlaces arquitectónicos y guía de uso.

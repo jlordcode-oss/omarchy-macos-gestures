@@ -50,8 +50,9 @@ class TestMacOSGestures(unittest.TestCase):
         self.assertIn("drag_3fg = 0", lua)
         self.assertIn("fingers = 3", lua)
         self.assertIn('direction = "horizontal"', lua)
-        self.assertIn('direction = "up"', lua)
-        self.assertIn('direction = "down"', lua)
+        self.assertIn('direction = "vertical"', lua)
+        self.assertIn('missionControl', lua)
+        self.assertIn('appExpose', lua)
         self.assertIn('direction = "pinchin"', lua)
         self.assertIn('direction = "pinchout"', lua)
 

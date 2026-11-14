@@ -25,10 +25,10 @@ Tras una investigación exhaustiva del kernel Linux (`libinput`), la arquitectur
 | Gesto macOS | Función en macOS | Equivalente en Omarchy | Implementación Técnica |
 | :--- | :--- | :--- | :--- |
 | **Deslizar 3/4 dedos (horizontal)** | Cambiar entre escritorios / apps pantalla completa | Transición 1:1 entre Workspaces | `hl.gesture({ fingers = 3/4, direction = "horizontal", action = "workspace" })` |
-| **Deslizar 3/4 dedos (hacia arriba)** | **Mission Control** | Overlay panorámico de ventanas y espacios | Invocación de `Overlay.qml` vía IPC Quickshell |
-| **Deslizar 3/4 dedos (hacia abajo)** | **App Exposé** | Ventanas de la aplicación activa | `Overlay.qml` en modo App Exposé |
-| **Pellizco con 4 dedos (hacia adentro)** | **Launchpad** | Parrilla de aplicaciones de Omarchy | Invocación de `omarchy-shell omarchy.dock apps` |
-| **Separar 4 dedos (hacia afuera)** | **Mostrar Escritorio** | Ocultar ventanas y mostrar escritorio limpio | Toggle de espacio de trabajo especial `desktop` |
+| **Deslizar 3/4 dedos (hacia arriba)** | **Mission Control** | Overlay panorámico de ventanas y espacios | `hl.gesture({ direction = "vertical", action = { update, finish } })` (delta.y < 0) |
+| **Deslizar 3/4 dedos (hacia abajo)** | **App Exposé** | Ventanas de la aplicación activa | `hl.gesture({ direction = "vertical", action = { update, finish } })` (delta.y > 0) |
+| **Separar 4 dedos (hacia afuera / Spread)** | **Launchpad** | Parrilla de aplicaciones de Omarchy | Invocación de `omarchy-shell omarchy.dock apps` |
+| **Pellizco con 4 dedos (hacia adentro / Pinch)** | **Mostrar Escritorio** | Ocultar ventanas y mostrar escritorio limpio | Toggle de espacio de trabajo especial `desktop` |
 | **Arrastrar con 3 dedos** | Arrastrar ventanas y seleccionar texto | Three-finger drag en libinput | `hl.config({ input = { touchpad = { drag_3fg = 1 } } })` |
 | **Desplazamiento con 2 dedos** | Desplazamiento natural (*Natural Scrolling*) | Scroll en dirección del movimiento | `touchpad.natural_scroll = true` |
 | **Pulsar con 2 dedos** | Clic secundario | Clic derecho con dos dedos | `touchpad.clickfinger_behavior = true` |
