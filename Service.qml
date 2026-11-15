@@ -34,12 +34,6 @@ Item {
     running: false
   }
 
-  Process {
-    id: dockAppsProc
-    running: false
-    command: ["omarchy-shell", "omarchy.dock", "apps"]
-  }
-
   IpcHandler {
     target: "io.github.devmercenario.macos-gestures"
 
@@ -70,39 +64,17 @@ Item {
       return "invalid-mode"
     }
 
+    function naturalScroll(state: string): string {
+      if (state === "on" || state === "off" || state === "toggle") {
+        root.runManager(["natural-scroll", state])
+        return state
+      }
+      return "invalid-state"
+    }
+
     function sync(): string {
       root.runManager(["sync"])
       return "synced"
-    }
-
-    function missionControl(): string {
-      if (root.shell) {
-        root.shell.toggle("io.github.devmercenario.macos-gestures", "{}")
-        return "toggled"
-      }
-      return "no-shell"
-    }
-
-    function appExpose(): string {
-      if (root.shell) {
-        root.shell.toggle("io.github.devmercenario.macos-gestures", JSON.stringify({ appExpose: true }))
-        return "toggled"
-      }
-      return "no-shell"
-    }
-
-    function launchpad(): string {
-      if (root.shell) {
-        root.shell.toggle("omarchy.menu", JSON.stringify({ menu: "apps" }))
-        return "launchpad"
-      }
-      dockAppsProc.running = true
-      return "launchpad"
-    }
-
-    function showDesktop(): string {
-      Hyprland.dispatch("hl.dsp.workspace.toggle_special()")
-      return "show-desktop"
     }
   }
 

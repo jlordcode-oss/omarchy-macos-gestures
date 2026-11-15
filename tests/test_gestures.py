@@ -27,10 +27,8 @@ class TestMacOSGestures(unittest.TestCase):
 
         self.assertEqual(data.get("schemaVersion"), 1)
         self.assertEqual(data.get("id"), "io.github.devmercenario.macos-gestures")
-        self.assertIn("service", data.get("kinds", []))
-        self.assertIn("overlay", data.get("kinds", []))
+        self.assertEqual(data.get("kinds"), ["service"])
         self.assertEqual(data.get("entryPoints", {}).get("service"), "Service.qml")
-        self.assertEqual(data.get("entryPoints", {}).get("overlay"), "Overlay.qml")
 
     def test_generate_lua_standard_mode(self):
         config = {
@@ -39,9 +37,6 @@ class TestMacOSGestures(unittest.TestCase):
             "naturalScroll": True,
             "clickfinger": True,
             "workspaceSwipeFingers": 3,
-            "missionControlFingers": 3,
-            "appExposeFingers": 3,
-            "launchpadFingers": 4,
             "drag3fg": False,
             "scrollFactor": 0.4,
         }
@@ -50,11 +45,11 @@ class TestMacOSGestures(unittest.TestCase):
         self.assertIn("drag_3fg = 0", lua)
         self.assertIn("fingers = 3", lua)
         self.assertIn('direction = "horizontal"', lua)
-        self.assertIn('direction = "vertical"', lua)
-        self.assertIn('missionControl', lua)
-        self.assertIn('appExpose', lua)
-        self.assertIn('direction = "pinchin"', lua)
-        self.assertIn('direction = "pinchout"', lua)
+        self.assertIn('action = "workspace"', lua)
+        # Ensure vertical and pinch gestures are NOT present
+        self.assertNotIn('direction = "vertical"', lua)
+        self.assertNotIn('direction = "pinchin"', lua)
+        self.assertNotIn('direction = "pinchout"', lua)
 
         # Syntax check with luac
         with tempfile.NamedTemporaryFile("w", suffix=".lua", delete=False) as tf:
@@ -73,9 +68,6 @@ class TestMacOSGestures(unittest.TestCase):
             "naturalScroll": True,
             "clickfinger": True,
             "workspaceSwipeFingers": 4,
-            "missionControlFingers": 4,
-            "appExposeFingers": 4,
-            "launchpadFingers": 4,
             "drag3fg": True,
             "scrollFactor": 0.4,
         }
@@ -83,6 +75,7 @@ class TestMacOSGestures(unittest.TestCase):
         self.assertIn("drag_3fg = 1", lua)
         self.assertIn("fingers = 4", lua)
         self.assertIn('direction = "horizontal"', lua)
+        self.assertIn('action = "workspace"', lua)
 
         with tempfile.NamedTemporaryFile("w", suffix=".lua", delete=False) as tf:
             tf.write(lua)

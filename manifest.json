@@ -2,16 +2,14 @@
   "schemaVersion": 1,
   "id": "io.github.devmercenario.macos-gestures",
   "name": "macOS Gestures",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "author": "devmercenario",
   "license": "MIT",
-  "description": "Native macOS Trackpad Gestures for Omarchy: Mission Control, Spaces Swipes, App Exposé, Launchpad, and 3-Finger Drag",
+  "description": "Native macOS-style 3-finger and 4-finger horizontal workspace swipe with natural scrolling for Omarchy & Hyprland",
   "kinds": [
-    "service",
-    "overlay"
+    "service"
   ],
   "entryPoints": {
-    "service": "Service.qml",
-    "overlay": "Overlay.qml"
+    "service": "Service.qml"
   }
 }

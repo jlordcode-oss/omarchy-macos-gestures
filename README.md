@@ -1,148 +1,123 @@
 # macOS Gestures for Omarchy
 
-Gestos nativos de Trackpad estilo **macOS** para **Omarchy Linux** (Hyprland 0.56 + Quickshell Quattro).
+Native **macOS-style Horizontal Workspace Gestures** (Spaces swipe) for **Omarchy Linux** (Hyprland + Quickshell Quattro).
 
-![Preview](preview.svg)
-
----
-
-## 📋 Resumen de la Investigación y Viabilidad
-
-Tras una investigación exhaustiva del kernel Linux (`libinput`), la arquitectura del compositor Wayland (**Hyprland 0.56.2** sobre Aquamarine) y el shell de escritorio (**Omarchy 4 Quattro / Quickshell**):
-
-1. **Viabilidad 100% Confirmada**: Hyprland cuenta con soporte nativo de gestos multitáctiles en C++ (`CTrackpadGestures`), expuestos a través de la API Lua `hl.gesture`.
-2. **Física Fluida 1:1**: Hyprland ejecuta un seguimiento continuo e inercial (`CWorkspaceSwipeGesture`) idéntico al comportamiento de macOS Spaces.
-3. **Resolución de Conflictos (3 dedos vs 4 dedos)**: En macOS, cuando se activa el arrastre con tres dedos (*Three-Finger Drag*), los gestos de navegación conmutan a 4 dedos. Este plugin replica exactamente esta lógica a través de dos modos operativos:
-   - **Modo Standard**: Swipes de 3 dedos para cambiar espacios y Mission Control.
-   - **Modo Drag3fg**: Arrastre nativo con 3 dedos (`drag_3fg = 1`) y navegación con 4 dedos.
-4. **Mission Control Nativo**: Se implementa un overlay de pantalla completa en Quickshell (`Overlay.qml`) con previsualización de ventanas, organización por espacios, filtrado rápido por teclado y selección inmediata.
-5. **Reutilización del Ecosistema**: Launchpad aprovecha directamente la cuadrícula de aplicaciones oficial de Omarchy (`omarchy.dock apps`) y el Centro de Notificaciones utiliza el historial del shell.
+![Preview](preview.png)
 
 ---
 
-## 🖐️ Matriz de Gestos
+## 📋 Overview
 
-| Gesto macOS | Función en macOS | Equivalente en Omarchy | Implementación Técnica |
-| :--- | :--- | :--- | :--- |
-| **Deslizar 3/4 dedos (horizontal)** | Cambiar entre escritorios / apps pantalla completa | Transición 1:1 entre Workspaces | `hl.gesture({ fingers = 3/4, direction = "horizontal", action = "workspace" })` |
-| **Deslizar 3/4 dedos (hacia arriba)** | **Mission Control** | Overlay panorámico de ventanas y espacios | `hl.gesture({ direction = "vertical", action = { update, finish } })` (delta.y < 0) |
-| **Deslizar 3/4 dedos (hacia abajo)** | **App Exposé** | Ventanas de la aplicación activa | `hl.gesture({ direction = "vertical", action = { update, finish } })` (delta.y > 0) |
-| **Separar 4 dedos (hacia afuera / Spread)** | **Launchpad** | Parrilla de aplicaciones de Omarchy | Invocación de `omarchy-shell omarchy.dock apps` |
-| **Pellizco con 4 dedos (hacia adentro / Pinch)** | **Mostrar Escritorio** | Ocultar ventanas y mostrar escritorio limpio | Toggle de espacio de trabajo especial `desktop` |
-| **Arrastrar con 3 dedos** | Arrastrar ventanas y seleccionar texto | Three-finger drag en libinput | `hl.config({ input = { touchpad = { drag_3fg = 1 } } })` |
-| **Desplazamiento con 2 dedos** | Desplazamiento natural (*Natural Scrolling*) | Scroll en dirección del movimiento | `touchpad.natural_scroll = true` |
-| **Pulsar con 2 dedos** | Clic secundario | Clic derecho con dos dedos | `touchpad.clickfinger_behavior = true` |
-| **Pellizcar con 2 dedos** | Zoom en apps | Zoom nativo Wayland en clientes | Protocolo Wayland `zwp_pointer_gestures_v1` |
+**macOS Gestures** brings Apple's fluid trackpad workspace navigation to Omarchy:
+
+1. **Fluid 1:1 Horizontal Tracking**: Hyprland's native C++ workspace swipe engine (`CWorkspaceSwipeGesture`) delivers continuous, inertial transitions between workspaces that directly follow your finger motion.
+2. **Two Workflow Modes**:
+   - **Standard Mode**: 3-finger horizontal swipe to switch workspaces (default).
+   - **3-Finger Drag Mode (`drag3fg`)**: 3 fingers drag windows natively (`drag_3fg = 1`), while workspace navigation seamlessly switches to 4-finger horizontal swipes—matching macOS behavior.
+3. **Apple-style Touchpad Mechanics**: Natural scrolling, clickfinger behavior (two-finger right-click), and calibrated sensitivity.
+4. **Zero Overhead**: Fully integrates with Hyprland's Lua gesture API and Quickshell's background service architecture.
 
 ---
 
-## 🏗️ Arquitectura del Plugin
+## 🖐️ Gesture Matrix
 
-El plugin está estructurado bajo el estándar modular de **Omarchy Quattro**:
-
-```
-omarchy-macos-gestures/
-├── manifest.json              # Manifiesto schemaVersion 1 (kinds: service, overlay)
-├── Service.qml                # Servicio en segundo plano con IpcHandler y sincronización
-├── Overlay.qml                # Overlay de Mission Control y App Exposé (Quickshell)
-├── bin/
-│   └── omarchy-macos-gestures # Herramienta CLI de gestión
-├── docs/
-│   └── GESTURES_GUIDE.md      # Guía detallada de gestos, hardware y troubleshooting
-├── scripts/
-│   ├── macos_gestures_manager.py # Generador reactivo de configuración Hyprland Lua
-│   └── validate_manifest.py     # Validador portátil de manifiesto
-├── tests/
-│   ├── run                    # Suite de verificación y validación oficial
-│   └── test_gestures.py       # Pruebas unitarias de sintaxis Lua y perfiles
-├── install.sh                 # Instalador seguro para Omarchy
-└── uninstall.sh               # Desinstalador limpio
-```
+| Gesture | Action | Implementation |
+| :--- | :--- | :--- |
+| **3-Finger Swipe (Left / Right)** | Switch spaces / workspaces (1:1 continuous) | `hl.gesture({ fingers = 3, direction = "horizontal", action = "workspace" })` |
+| **4-Finger Swipe (Left / Right)** | Switch spaces (when 3-finger drag is active) | `hl.gesture({ fingers = 4, direction = "horizontal", action = "workspace" })` |
+| **3-Finger Window Drag** | Drag active window under cursor (in `drag3fg` mode) | `hl.config({ input = { touchpad = { drag_3fg = 1 } } })` |
+| **2-Finger Scroll** | Natural scrolling (content follows fingers) | `touchpad.natural_scroll = true` |
+| **2-Finger Tap / Click** | Secondary click (Right-click) | `touchpad.clickfinger_behavior = true` |
 
 ---
 
-## 🚀 Instalación Rápida
+## 📦 Installation
 
-Para instalar y habilitar el plugin en tu entorno Omarchy:
+### From Omarchy Marketplace / Plugin Manager
 
 ```bash
-git clone https://github.com/devmercenario/omarchy-macos-gestures.git
+omarchy plugin add https://github.com/jlordcode-oss/omarchy-macos-gestures
+```
+
+### Manual Installation
+
+```bash
+git clone https://github.com/jlordcode-oss/omarchy-macos-gestures.git
 cd omarchy-macos-gestures
-./install.sh
+./scripts/install.sh
 ```
 
-El instalador:
-1. Ejecuta la suite de pruebas unitarias y validación con `omarchy plugin validate`.
-2. Instala los componentes en `~/.config/omarchy/plugins/io.github.devmercenario.macos-gestures/`.
-3. Crea el enlace del comando CLI `omarchy-macos-gestures` en `~/.local/bin/`.
-4. Habilita el plugin en el shell de Omarchy y sincroniza los gestos en `~/.config/hypr/macos_gestures.lua`.
-5. Recarga Hyprland de forma transparente sin interrupciones.
+The plugin automatically configures `~/.config/hypr/macos_gestures.lua` and reloads Hyprland seamlessly.
 
 ---
 
-## 🛠️ Uso y Comandos CLI
-
-El comando `omarchy-macos-gestures` permite controlar todos los aspectos de los gestos:
+## 🗑️ Removal
 
 ```bash
-# Ver el estado actual, perfil activo y configuración de dedos
+omarchy plugin remove io.github.devmercenario.macos-gestures
+```
+
+Or run the uninstaller script:
+
+```bash
+./scripts/uninstall.sh
+```
+
+---
+
+## 🛠️ CLI Usage
+
+The included CLI helper `omarchy-macos-gestures` allows instant configuration:
+
+```bash
+# Check current status and active profile
 omarchy-macos-gestures status
 
-# Salida en formato JSON para scripts o integraciones
+# Output status in JSON format
 omarchy-macos-gestures status --json
 
-# Cambiar al perfil estándar (3 dedos para navegar, 4 dedos para Launchpad)
+# Set Standard profile (3-finger horizontal swipe)
 omarchy-macos-gestures mode standard
 
-# Cambiar al perfil con arrastre de 3 dedos (3 dedos para drag, 4 dedos para navegar)
+# Set 3-Finger Drag profile (3-finger drag + 4-finger horizontal swipe)
 omarchy-macos-gestures mode drag3fg
 
-# Alternar o configurar desplazamiento natural
+# Toggle or set natural scrolling
 omarchy-macos-gestures natural-scroll toggle
+omarchy-macos-gestures natural-scroll on
+omarchy-macos-gestures natural-scroll off
 
-# Abrir Mission Control directamente desde terminal o atajo
-omarchy-macos-gestures mission-control
+# Enable or disable gestures
+omarchy-macos-gestures disable
+omarchy-macos-gestures enable
 
-# Abrir App Exposé para la ventana actual
-omarchy-macos-gestures app-expose
-
-# Deshabilitar o habilitar temporalmente los gestos
-omarchy-macos-gestures toggle
+# Force re-sync with Hyprland
+omarchy-macos-gestures sync
 ```
 
 ---
 
-## 📖 Documentación Detallada y Guía de Usuario
+## 🔌 IPC Interface
 
-Para una referencia exhaustiva sobre el comportamiento de cada gesto, optimización de hardware y solución de problemas, consulta:
-
-👉 **[Guía Completa de Gestos y Hardware (`docs/GESTURES_GUIDE.md`)](docs/GESTURES_GUIDE.md)**
-
-Contenidos destacados de la guía:
-- **Mapeo técnico exhaustivo**: Desglose de 2, 3 y 4 dedos para `mode standard` y `mode drag3fg`.
-- **Mission Control & App Exposé**: Uso de la búsqueda interactiva, filtrado por app y navegación por teclado.
-- **Hardware y Sensibilidad**: Consejos para Apple Magic Trackpad 2/3 (Bluetooth/USB) y trackpads de portátiles (ThinkPad, XPS, Framework).
-- **Resolución de Problemas (Troubleshooting)**: Diagnóstico con `hyprctl configerrors`, permisos de usuario (`input`), eliminación de conflictos con daemons antiguos (`libinput-gestures`, `touchegg`) y recuperación rápida.
-- **Integración IPC**: Control programático a través de `omarchy-shell` y atajos de teclado en Hyprland.
-
----
-
-## 🧪 Pruebas y Control de Calidad
-
-Para ejecutar la suite de pruebas:
+The plugin exposes an IPC handler on Omarchy's shell bus (`io.github.devmercenario.macos-gestures`):
 
 ```bash
-./tests/run
+omarchy-shell io.github.devmercenario.macos-gestures status
+omarchy-shell io.github.devmercenario.macos-gestures setMode standard
+omarchy-shell io.github.devmercenario.macos-gestures setMode drag3fg
+omarchy-shell io.github.devmercenario.macos-gestures sync
 ```
-
-Resultado verificado:
-- Validación de esquema `manifest.json`.
-- Pruebas sintácticas de Lua mediante `luac -p`.
-- Validación oficial mediante `omarchy plugin validate`.
-- Verificación de ausencia de errores en Hyprland mediante `hyprctl configerrors`.
 
 ---
 
-## 📄 Licencia
+## 🔒 Security & Privilege Policy
 
-MIT © devmercenario
+- **No sudo or pkexec is required.** The plugin runs entirely with normal user permissions within Omarchy and Hyprland.
+- **No external daemons or background processes**: All logic runs either inside the native Omarchy Quickshell process or direct compositor calls.
+- **No telemetry or network calls**: Completely offline and privacy-first.
+
+---
+
+## 📄 License
+
+MIT License. Copyright (c) 2026 devmercenario / Omarchy Contributors.

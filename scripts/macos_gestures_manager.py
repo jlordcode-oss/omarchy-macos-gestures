@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 """
 macOS Gestures Manager for Omarchy
-Manages configuration and generates Hyprland Lua gesture bindings.
+Manages configuration and generates Hyprland Lua gesture bindings for macOS-style
+horizontal workspace navigation.
 """
 
 from __future__ import annotations
@@ -27,10 +28,6 @@ DEFAULT_CONFIG: Dict[str, Any] = {
     "clickfinger": True,
     "workspaceSwipe": True,
     "workspaceSwipeFingers": 3,
-    "missionControlFingers": 3,
-    "appExposeFingers": 3,
-    "launchpadFingers": 4,
-    "showDesktopFingers": 4,
     "drag3fg": False,
     "scrollFactor": 0.4,
 }
@@ -66,9 +63,8 @@ def generate_lua(config: Dict[str, Any]) -> str:
     is_drag3fg = mode == "drag3fg" or config.get("drag3fg", False)
 
     # In drag3fg mode, 3 fingers are dedicated to window dragging;
-    # navigation swipes are moved to 4 fingers, exactly matching macOS behavior.
+    # navigation swipes use 4 fingers, exactly matching macOS behavior.
     ws_fingers = 4 if is_drag3fg else int(config.get("workspaceSwipeFingers", 3))
-    mc_fingers = 4 if is_drag3fg else int(config.get("missionControlFingers", 3))
 
     natural_scroll = "true" if config.get("naturalScroll", True) else "false"
     clickfinger = "true" if config.get("clickfinger", True) else "false"
@@ -90,70 +86,11 @@ hl.config({{
   }},
 }})
 
--- 1. Spaces / Workspaces Swipe (1:1 continuous tracking)
+-- Spaces / Workspaces Swipe (1:1 continuous horizontal tracking)
 hl.gesture({{
   fingers = {ws_fingers},
   direction = "horizontal",
   action = "workspace",
-}})
-
--- 2. Vertical Swipes: Mission Control (Swipe Up) & App Exposé (Swipe Down)
--- Hyprland 0.56.2 matches vertical swipes via direction = "vertical".
--- Differentiating Swipe UP (Mission Control) vs Swipe DOWN (App Exposé) is handled
--- by accumulating vertical delta during the gesture.
-do
-  local vert_dy = 0
-  hl.gesture({{
-    fingers = {mc_fingers},
-    direction = "vertical",
-    disable_inhibit = true,
-    action = {{
-      start = function()
-        vert_dy = 0
-      end,
-      update = function(e)
-        if e and e.delta and e.delta.y then
-          vert_dy = vert_dy + e.delta.y
-        end
-      end,
-      finish = function(e)
-        if e and e.cancelled then
-          vert_dy = 0
-          return
-        end
-        if vert_dy < -10 or (e and (e.direction == "UP" or e.direction == "up")) then
-          hl.exec_cmd("omarchy-shell io.github.devmercenario.macos-gestures missionControl")
-        elseif vert_dy > 10 or (e and (e.direction == "DOWN" or e.direction == "down")) then
-          hl.exec_cmd("omarchy-shell io.github.devmercenario.macos-gestures appExpose")
-        end
-        vert_dy = 0
-      end,
-    }},
-  }})
-end
-
--- 3. Launchpad (Pinch In with 4 fingers - physically triggers on 4-finger spread on hardware)
-hl.gesture({{
-  fingers = 4,
-  direction = "pinchin",
-  disable_inhibit = true,
-  action = {{
-    finish = function()
-      hl.exec_cmd("omarchy-shell io.github.devmercenario.macos-gestures launchpad")
-    end,
-  }},
-}})
-
--- 4. Show Desktop (Pinch Out with 4 fingers - physically triggers on 4-finger pinch on hardware)
-hl.gesture({{
-  fingers = 4,
-  direction = "pinchout",
-  disable_inhibit = true,
-  action = {{
-    finish = function()
-      hl.exec_cmd("omarchy-shell io.github.devmercenario.macos-gestures showDesktop")
-    end,
-  }},
 }})
 """
     return lua_code
@@ -245,15 +182,12 @@ def main() -> int:
             status_str = "ENABLED" if config.get("enabled", True) else "DISABLED"
             mode = config.get("mode", "standard")
             is_drag = mode == "drag3fg" or config.get("drag3fg", False)
+            ws_fingers = "4 fingers" if is_drag else "3 fingers"
             print(f"macOS Gestures: {status_str}")
             print(f"Profile Mode:   {mode}")
+            print(f"Spaces Swipe:   {ws_fingers} (Horizontal)")
             print(f"3-Finger Drag:  {'Enabled' if is_drag else 'Disabled'}")
             print(f"Natural Scroll: {'Enabled' if config.get('naturalScroll', True) else 'Disabled'}")
-            print(f"Spaces Swipe:   {'4 fingers' if is_drag else '3 fingers'} (Horizontal)")
-            print(f"Mission Control:{'4 fingers' if is_drag else '3 fingers'} (Swipe Up)")
-            print(f"App Exposé:     {'4 fingers' if is_drag else '3 fingers'} (Swipe Down)")
-            print("Launchpad:      4 fingers (Spread / Pinch Out)")
-            print("Show Desktop:   4 fingers (Pinch In)")
             print(f"Config File:    {CONFIG_FILE}")
             print(f"Hyprland Lua:   {HYPR_GESTURES_FILE}")
         return 0
@@ -285,13 +219,9 @@ def main() -> int:
         if mode == "drag3fg":
             config["drag3fg"] = True
             config["workspaceSwipeFingers"] = 4
-            config["missionControlFingers"] = 4
-            config["appExposeFingers"] = 4
         else:
             config["drag3fg"] = False
             config["workspaceSwipeFingers"] = 3
-            config["missionControlFingers"] = 3
-            config["appExposeFingers"] = 3
         save_config(config)
         sync_hyprland(config)
         print(f"macOS Gestures profile mode set to: {mode}")

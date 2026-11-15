@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-REPO_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+REPO_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
 TARGET_PLUGIN_DIR="$HOME/.config/omarchy/plugins/io.github.devmercenario.macos-gestures"
 TARGET_BIN_DIR="$HOME/.local/bin"
 
@@ -14,8 +15,7 @@ mkdir -p "$TARGET_PLUGIN_DIR" "$TARGET_PLUGIN_DIR/scripts" "$TARGET_PLUGIN_DIR/b
 # Copy QML, manifest, and scripts (No symlinks inside plugin dir as required by Omarchy security model)
 cp "$REPO_DIR/manifest.json" "$TARGET_PLUGIN_DIR/"
 cp "$REPO_DIR/Service.qml" "$TARGET_PLUGIN_DIR/"
-cp "$REPO_DIR/Overlay.qml" "$TARGET_PLUGIN_DIR/"
-cp "$REPO_DIR/preview.svg" "$TARGET_PLUGIN_DIR/"
+cp "$REPO_DIR/preview.png" "$TARGET_PLUGIN_DIR/" 2>/dev/null || true
 cp -r "$REPO_DIR/scripts/"* "$TARGET_PLUGIN_DIR/scripts/"
 cp -r "$REPO_DIR/bin/"* "$TARGET_PLUGIN_DIR/bin/"
 chmod +x "$TARGET_PLUGIN_DIR/scripts/"* "$TARGET_PLUGIN_DIR/bin/"*
